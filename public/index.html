@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Screenshot Sheet Updater</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="workspace">
+        <div class="topbar">
+          <div>
+            <p class="eyebrow">Screenshot Sheet Updater</p>
+            <h1>Analyze a screenshot, append the result to Google Sheets.</h1>
+          </div>
+          <div class="status" id="status">Checking setup</div>
+        </div>
+
+        <div class="layout">
+          <section class="panel capture-panel">
+            <form id="uploadForm">
+              <label class="dropzone" id="dropzone">
+                <input id="screenshotInput" type="file" accept="image/png,image/jpeg,image/webp" required>
+                <span class="drop-icon" aria-hidden="true">+</span>
+                <span class="drop-title">Drop or choose screenshot</span>
+                <span class="drop-copy">PNG, JPG, or WebP</span>
+              </label>
+
+              <label class="field">
+                <span>Context notes</span>
+                <textarea id="notes" rows="5" placeholder="Optional: tell the analyzer what to focus on"></textarea>
+              </label>
+
+              <div class="actions">
+                <button class="primary" id="submitButton" type="submit">Analyze and append</button>
+                <button class="secondary" id="headersButton" type="button">Append headers</button>
+              </div>
+            </form>
+          </section>
+
+          <section class="panel preview-panel">
+            <div class="preview-frame" id="previewFrame">
+              <span>No screenshot selected</span>
+              <img id="preview" alt="">
+            </div>
+          </section>
+
+          <section class="panel results-panel">
+            <div class="panel-header">
+              <h2>Latest analysis</h2>
+              <span id="modelBadge">Model</span>
+            </div>
+            <div class="result-grid" id="results">
+              <p class="empty">Upload a screenshot to see the structured output before it lands in the sheet.</p>
+            </div>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>
