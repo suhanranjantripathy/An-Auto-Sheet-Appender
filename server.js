@@ -460,7 +460,7 @@ function getMissingConfig() {
 
 function getMissingAppendConfig() {
   if (env("GOOGLE_APPS_SCRIPT_WEBAPP_URL")) {
-    return [];
+    return env("GOOGLE_APPS_SCRIPT_TOKEN") ? [] : ["GOOGLE_APPS_SCRIPT_TOKEN"];
   }
 
   if (env("GOOGLE_SERVICE_ACCOUNT_EMAIL") && env("GOOGLE_PRIVATE_KEY") && env("GOOGLE_SHEET_ID")) {
@@ -473,7 +473,7 @@ function getMissingAppendConfig() {
 }
 
 function getAppendMode() {
-  if (env("GOOGLE_APPS_SCRIPT_WEBAPP_URL")) {
+  if (env("GOOGLE_APPS_SCRIPT_WEBAPP_URL") && env("GOOGLE_APPS_SCRIPT_TOKEN")) {
     return "apps-script-webhook";
   }
   if (env("GOOGLE_SERVICE_ACCOUNT_EMAIL") && env("GOOGLE_PRIVATE_KEY") && env("GOOGLE_SHEET_ID")) {
