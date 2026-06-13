@@ -45,17 +45,19 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (req.method === "POST" && url.pathname === "/api/analyze-append") {
-      const missing = getMissingConfig();
+      const payload = await readJsonBody(req);
+      validatePayload(payload);
+
+      const missing = getMissingConfig(payload);
       if (missing.length) {
         return sendJson(res, 400, { error: `Missing configuration: ${missing.join(", ")}` });
       }
 
-      const payload = await readJsonBody(req);
-      validatePayload(payload);
-
       const analysis = await analyzeScreenshot(payload);
       const rows = buildSheetRows(payload, analysis);
-      const appendResult = await appendToGoogleSheet(rows);
+      const appendResult = await appendToGoogleSheet(rows, {
+        appsScriptToken: payload.googleAppsScriptToken
+      });
 
       if (appendResult?.ok === false) {
         throw new Error(`Sheet append failed: ${appendResult.error || "Apps Script returned ok:false"}`);
@@ -65,12 +67,15 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (req.method === "POST" && url.pathname === "/api/append-headers") {
-      const missing = getMissingAppendConfig();
+      const payload = await readJsonBody(req);
+      const missing = getMissingAppendConfig(payload);
       if (missing.length) {
         return sendJson(res, 400, { error: `Missing configuration: ${missing.join(", ")}` });
       }
 
-      const appendResult = await appendToGoogleSheet(SHEET_COLUMNS);
+      const appendResult = await appendToGoogleSheet(SHEET_COLUMNS, {
+        appsScriptToken: payload.googleAppsScriptToken
+      });
       if (appendResult?.ok === false) {
         throw new Error(`Header append failed: ${appendResult.error || "Apps Script returned ok:false"}`);
       }
@@ -199,9 +204,9 @@ function buildSheetRows(payload, analysis) {
   ]);
 }
 
-async function appendToGoogleSheet(rows) {
+async function appendToGoogleSheet(rows, options = {}) {
   if (env("GOOGLE_APPS_SCRIPT_WEBAPP_URL")) {
-    return appendWithAppsScript(rows);
+    return appendWithAppsScript(rows, options);
   }
 
   const token = await getGoogleAccessToken();
@@ -218,9 +223,9 @@ async function appendToGoogleSheet(rows) {
   });
 }
 
-async function appendWithAppsScript(rows) {
+async function appendWithAppsScript(rows, options = {}) {
   const url = new URL(env("GOOGLE_APPS_SCRIPT_WEBAPP_URL"));
-  const token = env("GOOGLE_APPS_SCRIPT_TOKEN");
+  const token = env("GOOGLE_APPS_SCRIPT_TOKEN") || options.appsScriptToken || "";
   if (token) {
     url.searchParams.set("token", token);
   }
@@ -449,18 +454,18 @@ function loadDotEnv(filePath) {
   }
 }
 
-function getMissingConfig() {
+function getMissingConfig(options = {}) {
   const missing = [];
   if (!getAiKey()) {
     missing.push("GROQ_API_KEY or XAI_API_KEY");
   }
-  missing.push(...getMissingAppendConfig());
+  missing.push(...getMissingAppendConfig(options));
   return missing;
 }
 
-function getMissingAppendConfig() {
+function getMissingAppendConfig(options = {}) {
   if (env("GOOGLE_APPS_SCRIPT_WEBAPP_URL")) {
-    return env("GOOGLE_APPS_SCRIPT_TOKEN") ? [] : ["GOOGLE_APPS_SCRIPT_TOKEN"];
+    return env("GOOGLE_APPS_SCRIPT_TOKEN") || options.googleAppsScriptToken ? [] : ["GOOGLE_APPS_SCRIPT_TOKEN"];
   }
 
   if (env("GOOGLE_SERVICE_ACCOUNT_EMAIL") && env("GOOGLE_PRIVATE_KEY") && env("GOOGLE_SHEET_ID")) {

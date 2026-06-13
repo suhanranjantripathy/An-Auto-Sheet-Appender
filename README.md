@@ -32,6 +32,8 @@ GOOGLE_APPS_SCRIPT_TOKEN=the-token-the-client-chose
 GOOGLE_SHEET_NAME=Sheet1
 ```
 
+If the app is deployed somewhere and `GOOGLE_APPS_SCRIPT_TOKEN` is not configured in that host, paste the token into the app's **Webhook token** field before appending.
+
 With this method, the client keeps Google access inside their own Sheet/account. Your app only posts rows to their webhook.
 
 ## Service account fallback

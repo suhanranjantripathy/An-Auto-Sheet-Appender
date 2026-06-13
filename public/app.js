@@ -1,6 +1,7 @@
 const form = document.querySelector("#uploadForm");
 const input = document.querySelector("#screenshotInput");
 const notes = document.querySelector("#notes");
+const webhookToken = document.querySelector("#webhookToken");
 const dropzone = document.querySelector("#dropzone");
 const previewFrame = document.querySelector("#previewFrame");
 const preview = document.querySelector("#preview");
@@ -87,7 +88,8 @@ async function handleSubmit(event) {
     const response = await postJson("/api/analyze-append", {
       imageDataUrl: selectedDataUrl,
       fileName: selectedFileName,
-      notes: notes.value.trim()
+      notes: notes.value.trim(),
+      googleAppsScriptToken: webhookToken.value.trim()
     });
     const appendedRows = response.appendResult?.appendedRows || response.rows?.length || 0;
     renderAnalysis(response.analysis, response.appendResult);
@@ -103,7 +105,9 @@ async function handleSubmit(event) {
 async function appendHeaders() {
   setBusy(true, "Appending headers");
   try {
-    const response = await postJson("/api/append-headers", {});
+    const response = await postJson("/api/append-headers", {
+      googleAppsScriptToken: webhookToken.value.trim()
+    });
     const appendedRows = response.appendResult?.appendedRows || 1;
     statusEl.textContent = `Headers appended (${appendedRows} row)`;
     statusEl.className = "status ready";
