@@ -89,8 +89,9 @@ async function handleSubmit(event) {
       fileName: selectedFileName,
       notes: notes.value.trim()
     });
-    renderAnalysis(response.analysis, true);
-    statusEl.textContent = "Appended to sheet";
+    const appendedRows = response.appendResult?.appendedRows || response.rows?.length || 0;
+    renderAnalysis(response.analysis, response.appendResult);
+    statusEl.textContent = `Appended ${appendedRows} row${appendedRows === 1 ? "" : "s"} to sheet`;
     statusEl.className = "status ready";
   } catch (error) {
     showError(error.message);
@@ -102,8 +103,9 @@ async function handleSubmit(event) {
 async function appendHeaders() {
   setBusy(true, "Appending headers");
   try {
-    await postJson("/api/append-headers", {});
-    statusEl.textContent = "Headers appended";
+    const response = await postJson("/api/append-headers", {});
+    const appendedRows = response.appendResult?.appendedRows || 1;
+    statusEl.textContent = `Headers appended (${appendedRows} row)`;
     statusEl.className = "status ready";
   } catch (error) {
     showError(error.message);
@@ -112,8 +114,10 @@ async function appendHeaders() {
   }
 }
 
-function renderAnalysis(analysis, appended) {
+function renderAnalysis(analysis, appendResult) {
   results.innerHTML = "";
+  const appendedRows = appendResult?.appendedRows || 0;
+  const lastRow = appendResult?.lastRow ? ` Last row: ${appendResult.lastRow}.` : "";
   const items = [
     ["Customer", analysis.customer_name],
     ["Phone", analysis.phone],
@@ -123,7 +127,7 @@ function renderAnalysis(analysis, appended) {
     ["Service", analysis.type_of_service, "wide"],
     ["Tyres", (analysis.tyres || []).map((tyre) => `${tyre.position}: ${tyre.brand} ${tyre.tyre_name}, NSD ${tyre.nsd}, ${tyre.platform}, ${tyre.size}, ${tyre.fitment_year}`), "wide"],
     ["Confidence", `${Math.round(Number(analysis.confidence || 0) * 100)}%`],
-    ["Sheet status", appended ? "Row appended successfully" : "Not appended"]
+    ["Sheet status", appendedRows ? `${appendedRows} rows appended successfully.${lastRow}` : "Not appended"]
   ];
 
   for (const [label, value, className = ""] of items) {

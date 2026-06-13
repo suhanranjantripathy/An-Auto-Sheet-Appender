@@ -57,6 +57,10 @@ const server = http.createServer(async (req, res) => {
       const rows = buildSheetRows(payload, analysis);
       const appendResult = await appendToGoogleSheet(rows);
 
+      if (appendResult?.ok === false) {
+        throw new Error(`Sheet append failed: ${appendResult.error || "Apps Script returned ok:false"}`);
+      }
+
       return sendJson(res, 200, { analysis, rows, appendResult });
     }
 
@@ -67,6 +71,9 @@ const server = http.createServer(async (req, res) => {
       }
 
       const appendResult = await appendToGoogleSheet(SHEET_COLUMNS);
+      if (appendResult?.ok === false) {
+        throw new Error(`Header append failed: ${appendResult.error || "Apps Script returned ok:false"}`);
+      }
       return sendJson(res, 200, { row: SHEET_COLUMNS, appendResult });
     }
 
@@ -218,11 +225,20 @@ async function appendWithAppsScript(rows) {
     url.searchParams.set("token", token);
   }
 
-  return postJson(url.toString(), {
+  const result = await postJson(url.toString(), {
     rows: Array.isArray(rows[0]) ? rows : [rows],
     columns: SHEET_COLUMNS,
     sheetName: env("GOOGLE_SHEET_NAME", "Sheet1")
   });
+
+  if (result?.ok === false) {
+    throw new Error(`Apps Script append failed: ${result.error || "unknown error"}`);
+  }
+  if (!result || result.ok !== true) {
+    throw new Error("Apps Script append did not return ok:true.");
+  }
+
+  return result;
 }
 
 async function getGoogleAccessToken() {
