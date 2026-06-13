@@ -33,7 +33,10 @@ function doPost(e) {
 
     const sheet = getTargetSheet(body.sheetName || DEFAULT_SHEET_NAME);
     ensureHeaders(sheet);
-    sheet.getRange(sheet.getLastRow() + 1, 1, rows.length, HEADERS.length).setValues(rows);
+    const appendRange = sheet.getRange(sheet.getLastRow() + 1, 1, rows.length, HEADERS.length);
+    appendRange
+      .setValues(rows)
+      .setFontSize(11);
 
     return jsonResponse({
       ok: true,
@@ -66,7 +69,9 @@ function ensureHeaders(sheet) {
     return String(value || "").trim() !== "";
   });
   if (!hasHeaders) {
-    sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
+    sheet.getRange(1, 1, 1, HEADERS.length)
+      .setValues([HEADERS])
+      .setFontSize(11);
     sheet.setFrozenRows(1);
   }
 }
