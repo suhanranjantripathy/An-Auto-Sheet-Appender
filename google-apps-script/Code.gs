@@ -33,6 +33,18 @@ function doPost(e) {
 
     const sheet = getTargetSheet(body.sheetName || DEFAULT_SHEET_NAME);
     ensureHeaders(sheet);
+    const duplicateCount = countDuplicateRows(sheet, rows);
+    if (duplicateCount > 0) {
+      return jsonResponse({
+        ok: false,
+        duplicate: true,
+        error: "Warning: this data has already been entered.",
+        duplicateRows: duplicateCount,
+        sheetName: sheet.getName(),
+        lastRow: sheet.getLastRow()
+      }, 409);
+    }
+
     const appendRange = sheet.getRange(sheet.getLastRow() + 1, 1, rows.length, HEADERS.length);
     appendRange
       .setValues(rows)
@@ -74,6 +86,31 @@ function ensureHeaders(sheet) {
       .setFontSize(11);
     sheet.setFrozenRows(1);
   }
+}
+
+function countDuplicateRows(sheet, rows) {
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) {
+    return 0;
+  }
+
+  const existingRows = sheet.getRange(2, 1, lastRow - 1, HEADERS.length).getValues();
+  const existingKeys = {};
+  existingRows.forEach(function (row) {
+    existingKeys[rowKey(row)] = true;
+  });
+
+  return rows.filter(function (row) {
+    return existingKeys[rowKey(row)];
+  }).length;
+}
+
+function rowKey(row) {
+  return row.slice(0, HEADERS.length).map(function (value) {
+    return String(value === null || value === undefined ? "" : value)
+      .trim()
+      .toLowerCase();
+  }).join("||");
 }
 
 function normalizeRows(rows) {

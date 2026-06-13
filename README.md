@@ -36,6 +36,8 @@ If the app is deployed somewhere and `GOOGLE_APPS_SCRIPT_TOKEN` is not configure
 
 With this method, the client keeps Google access inside their own Sheet/account. Your app only posts rows to their webhook.
 
+The Apps Script blocks duplicate rows. If the same 15-column tyre rows are already present, it returns a warning instead of appending them again.
+
 ## Service account fallback
 
 Use this only if the client is willing to share the Sheet with a service account.

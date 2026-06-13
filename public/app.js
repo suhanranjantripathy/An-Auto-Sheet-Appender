@@ -97,6 +97,9 @@ async function handleSubmit(event) {
     statusEl.className = "status ready";
   } catch (error) {
     showError(error.message);
+    if (/already been entered|duplicate/i.test(error.message)) {
+      window.alert("Warning: this data has already been entered.");
+    }
   } finally {
     setBusy(false);
   }
